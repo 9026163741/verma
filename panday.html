@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booth's Multiplication Algorithm Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Booth's Multiplication Algorithm Calculator</h1>
+    <label for="multiplicand">Multiplicand (decimal):</label>
+    <input type="number" id="multiplicand" required>
+    <br>
+    <label for="multiplier">Multiplier (decimal):</label>
+    <input type="number" id="multiplier" required>
+    <br>
+    <button onclick="calculateBooth()">Calculate</button>
+
+    <h2>Steps:</h2>
+    <div id="steps"></div>
+
+    <h2>Result:</h2>
+    <div id="result"></div>
+
+    <script>
+        function toBinary(num, bits) {
+            let binary = (num >>> 0).toString(2);
+            return binary.padStart(bits, '0');
+        }
+
+        function calculateBooth() {
+            const m = parseInt(document.getElementById('multiplicand').value);
+            const q = parseInt(document.getElementById('multiplier').value);
+            const n = Math.max(m.toString(2).length, q.toString(2).length) + 1; // +1 for sign bit
+
+            let M = toBinary(m, n);
+            let Q = toBinary(q, n);
+            let A = '0'.repeat(n);
+            let Q1 = '0';
+            let count = n;
+
+            let steps = `<p>Initial values:</p>
+                         <p>A = ${A}, Q = ${Q}, Q<sub>-1</sub> = ${Q1}, M = ${M}, Count = ${count}</p>`;
+            steps += '<table><tr><th>Step</th><th>A</th><th>Q</th><th>Q<sub>-1</sub></th><th>Operation</th></tr>';
+
+            while (count > 0) {
+                let operation = '';
+                const Q0 = Q[Q.length - 1];
+
+                if (Q0 === '1' && Q1 === '0') {
+                    A = (parseInt(A, 2) - parseInt(M, 2)).toString(2).padStart(n, '0').slice(-n);
+                    operation = 'A = A - M';
+                } else if (Q0 === '0' && Q1 === '1') {
+                    A = (parseInt(A, 2) + parseInt(M, 2)).toString(2).padStart(n, '0').slice(-n);
+                    operation = 'A = A + M';
+                } else {
+                    operation = 'No operation';
+                }
+
+                const combined = A + Q + Q1;
+                const shifted = combined[0] + combined.slice(0, -1);
+                A = shifted.slice(0, n);
+                Q = shifted.slice(n, 2 * n);
+                Q1 = shifted[2 * n];
+                count--;
+
+                steps += `<tr><td>${n - count}</td><td>${A}</td><td>${Q}</td><td>${Q1}</td><td>${operation}, Shift right</td></tr>`;
+            }
+
+            steps += '</table>';
+            const result = parseInt(A + Q, 2);
+            document.getElementById('steps').innerHTML = steps;
+            document.getElementById('result').innerHTML = `<p>${result} (binary: ${A + Q})</p>`;
+        }
+    </script>
+</body>
+</html>
